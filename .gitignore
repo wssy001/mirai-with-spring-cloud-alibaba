@@ -31,8 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
-/qqrobot/src/main/resources/application_back.yml
-/qqrobot/src/main/resources/bootstrap_back.yml
+
+*.yml
 /mvnw
 /device.json
 /mvnw.cmd
