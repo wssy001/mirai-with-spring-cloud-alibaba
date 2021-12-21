@@ -30,6 +30,10 @@
         <fastjson.version>1.2.78</fastjson.version>
         <commons.pool2.version>2.11.1</commons.pool2.version>
         <mirai.core.version>2.6.8</mirai.core.version>
+        <mybatis.plus.version>3.4.3</mybatis.plus.version>
+        <mybatis.plus.generator.version>3.5.1</mybatis.plus.generator.version>
+        <velocity.version>2.2</velocity.version>
+        <rocketMQ.version>2.2.1</rocketMQ.version>
     </properties>
 
     <dependencyManagement>
@@ -64,6 +68,13 @@
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson</artifactId>
                 <version>${redisson.version}</version>
+            </dependency>
+
+            <!--            RocketMQ-->
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>${rocketMQ.version}</version>
             </dependency>
 
             <!--            Hutool-->
@@ -101,6 +112,22 @@
                 <version>${mirai.core.version}</version>
             </dependency>
 
+            <!--            ORM-->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis.plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-generator</artifactId>
+                <version>${mybatis.plus.generator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-core</artifactId>
+                <version>${velocity.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

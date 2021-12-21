@@ -1,6 +1,5 @@
 package cyou.wssy001.cloud.bot.service;
 
-import cyou.wssy001.cloud.bot.entity.RepetitiveGroup;
 import cyou.wssy001.cloud.bot.entity.UnhandledHttpRequest;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Service;
@@ -13,7 +12,7 @@ import javax.annotation.Resource;
 public class UnhandledHttpRequestService {
     @Resource
     private ReactiveRedisOperations<String, UnhandledHttpRequest> reactiveRedisOperations;
-    public static final String HASH_KEY = RepetitiveGroup.class.getSimpleName();
+    public static final String HASH_KEY = UnhandledHttpRequestService.class.getSimpleName();
 
     public Mono<UnhandledHttpRequest> get(String id) {
         return reactiveRedisOperations.opsForHash()

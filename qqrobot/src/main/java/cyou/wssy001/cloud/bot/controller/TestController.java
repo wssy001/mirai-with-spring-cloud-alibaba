@@ -1,4 +1,4 @@
-package cyou.wssy001.cloud.bot.Controller;
+package cyou.wssy001.cloud.bot.controller;
 
 import cn.hutool.core.date.DateUtil;
 import cyou.wssy001.cloud.bot.entity.DynamicProperty;

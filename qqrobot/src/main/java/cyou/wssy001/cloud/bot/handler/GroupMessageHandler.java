@@ -1,83 +1,54 @@
 package cyou.wssy001.cloud.bot.handler;
 
-import cn.hutool.core.util.IdUtil;
-import cyou.wssy001.cloud.bot.entity.RepetitiveGroup;
-import cyou.wssy001.cloud.bot.service.RepetitiveGroupService;
+import cyou.wssy001.cloud.bot.dto.MessageChainDto;
+import cyou.wssy001.cloud.bot.service.LogSendCallbackService;
 import lombok.RequiredArgsConstructor;
-import net.mamoe.mirai.contact.ContactList;
-import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
+import net.mamoe.mirai.message.code.MiraiCode;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.jetbrains.annotations.NotNull;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.springframework.data.domain.Range;
-import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ReactiveZSetOperations;
+import org.springframework.data.redis.core.ReactiveRedisOperations;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.time.Duration;
+import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
 public class GroupMessageHandler {
-    private final RedissonClient redissonClient;
-    private final RepetitiveGroupService repetitiveGroupService;
     @Resource
-    private ReactiveZSetOperations<Long, Integer> reactiveZSetOperations;
+    private ReactiveRedisOperations<String, MessageChainDto> reactiveRedisOperations;
+
+    private final RocketMQTemplate rocketMQTemplate;
+    private final LogSendCallbackService logSendCallbackService;
 
     public void handle(@NotNull GroupMessageEvent event) {
-        long groupId = event.getGroup().getId();
-        long botId = event.getBot().getId();
+        String miraiCode = MiraiCode.serializeToMiraiCode(event.getMessage().iterator());
 
-        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(groupId)
-                .share()
-                .block();
-
-        RLock lock = null;
-        if (hasBeenConsumed(event, groupId)) return;
-
-        if (containMultiBots(repetitiveGroup, botId)) {
-            lock = redissonClient.getLock(IdUtil.fastSimpleUUID());
-            lock.lock(20, TimeUnit.SECONDS);
-        }
-
-        consume();
-
-        if (lock != null) lock.unlock();
-    }
-
-    //    检查事件是否以及被消费过
-    private boolean hasBeenConsumed(@NotNull GroupMessageEvent event, long groupId) {
-
-        long second = new Date().getTime();
-        Range<Double> range = Range.closed(0.0, second + 0.0);
-        reactiveZSetOperations.removeRangeByScore(groupId, range);
-
+        StringBuffer stringBuffer = new StringBuffer();
         int[] ids = event.getSource().getIds();
-        List<DefaultTypedTuple<Integer>> list = new ArrayList<>();
-        for (int id : ids) {
-            list.add(new DefaultTypedTuple<>(id, second + 10.0));
-        }
+        Arrays.stream(ids)
+                .forEach(stringBuffer::append);
 
-        Long unExist = reactiveZSetOperations.addAll(groupId, list)
+        String key = stringBuffer.toString();
+
+        MessageChainDto messageChainDto = new MessageChainDto();
+        messageChainDto.setIds(ids);
+        messageChainDto.setBotAccount(event.getBot().getId());
+        messageChainDto.setGroupNumber(event.getGroup().getId());
+        messageChainDto.setMiraiCode(miraiCode);
+
+        Boolean nonExist = reactiveRedisOperations.opsForValue()
+                .setIfAbsent(key, messageChainDto)
                 .share()
                 .block();
 
-        return unExist == null || unExist == 0;
+        if (!nonExist) return;
+
+        Duration ttl = Duration.ofSeconds(5);
+        reactiveRedisOperations.expire(key, ttl);
+        rocketMQTemplate.asyncSend("group-message", messageChainDto, logSendCallbackService);
     }
 
-    //    检查这个群是否有多个机器人监听群消息
-    private boolean containMultiBots(RepetitiveGroup repetitiveGroup, Long botId) {
-        return repetitiveGroup.getId() != null && repetitiveGroup.getBotIds().contains(botId);
-    }
-
-    //    消费事件
-    private void consume() {
-
-    }
 }

@@ -1,4 +1,4 @@
-package cyou.wssy001.cloud.bot.Controller;
+package cyou.wssy001.cloud.bot.controller;
 
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.NormalMember;
