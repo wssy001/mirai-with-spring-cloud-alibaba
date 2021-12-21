@@ -12,7 +12,7 @@ import javax.annotation.Resource;
 public class UnhandledHttpRequestService {
     @Resource
     private ReactiveRedisOperations<String, UnhandledHttpRequest> reactiveRedisOperations;
-    public static final String HASH_KEY = UnhandledHttpRequestService.class.getSimpleName();
+    public static final String HASH_KEY = UnhandledHttpRequest.class.getSimpleName();
 
     public Mono<UnhandledHttpRequest> get(String id) {
         return reactiveRedisOperations.opsForHash()
