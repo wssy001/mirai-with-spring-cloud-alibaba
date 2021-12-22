@@ -33,13 +33,17 @@ public class RobotBlockExceptionHandler implements BlockRequestHandler {
         JSONObject jsonObject = new JSONObject();
         jsonObject.putAll(decodeBody(uri.getRawQuery()));
 
-        UnhandledHttpRequest unhandledHttpRequest = new UnhandledHttpRequest(jsonObject.toJSONString());
+        UnhandledHttpRequest unhandledHttpRequest = new UnhandledHttpRequest();
         if (uri.getPath().contains("/send/msg")) {
             unhandledHttpRequest.setMethod("/send/msg");
+            unhandledHttpRequest.setMsg(jsonObject.getString("msg"));
         } else {
             unhandledHttpRequest.setMethod("/collect/msg");
         }
 
+        unhandledHttpRequest.setBotId(jsonObject.getLong("botId"));
+        unhandledHttpRequest.setGroupId(jsonObject.getLong("groupId"));
+        unhandledHttpRequest.setQQ(jsonObject.getLong("qq"));
         unhandledHttpRequestService.upset(unhandledHttpRequest);
         jsonObject.clear();
         jsonObject.put("msg", "机器人服务正忙，请稍后重试");

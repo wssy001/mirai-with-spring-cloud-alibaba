@@ -1,8 +1,6 @@
 package cyou.wssy001.cloud.bot.service;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import cyou.wssy001.cloud.bot.controller.BotController;
 import cyou.wssy001.cloud.bot.entity.BotAccount;
 import cyou.wssy001.cloud.bot.entity.DynamicProperty;
 import cyou.wssy001.cloud.bot.entity.UnhandledHttpRequest;
@@ -14,13 +12,14 @@ import net.mamoe.mirai.BotFactory;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.network.LoginFailedException;
 import net.mamoe.mirai.utils.BotConfiguration;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,16 +28,16 @@ import java.util.stream.Collectors;
 public class RobotService {
     private final DynamicProperty dynamicProperty;
     private final UnhandledHttpRequestService unhandledHttpRequestService;
-    private final BotController botController;
+    private final RocketMQTemplate rocketMQTemplate;
+    private final LogSendCallbackService logSendCallbackService;
 
     private final GroupMessageHandler groupMessageHandler;
 
     @PostConstruct
     private void init() {
         login(stringToBotAccountList(dynamicProperty.getAccounts()));
-//        handleStoredHttpRequest();
+        handleStoredHttpRequest();
     }
-
 
     public void refreshBot() {
         List<BotAccount> botAccounts = stringToBotAccountList(dynamicProperty.getAccounts())
@@ -46,7 +45,7 @@ public class RobotService {
                 .filter(v -> Bot.getInstanceOrNull(v.getAccount()) == null)
                 .collect(Collectors.toList());
 
-//        login(botAccounts);
+        login(botAccounts);
     }
 
     private void login(List<BotAccount> botAccounts) {
@@ -73,50 +72,16 @@ public class RobotService {
     }
 
     private void handleStoredHttpRequest() {
-        List<JSONObject> block = unhandledHttpRequestService.getAll()
-                .map(v -> JSON.parseObject(v.getBody()))
-                .filter(v -> v.containsKey("groupId"))
+        List<Message<UnhandledHttpRequest>> messageList = unhandledHttpRequestService.getAll()
+                .filter(Objects::nonNull)
+                .map(v -> MessageBuilder.withPayload(v).build())
                 .share()
                 .collectList()
                 .block();
 
-        if (block == null) return;
+        if (messageList == null) return;
 
-        Map<Long, List<UnhandledHttpRequest>> temp = new HashMap<>();
-
-        block.forEach(v -> {
-            List<UnhandledHttpRequest> list;
-            if (!temp.containsKey(v.getLong("groupId"))) {
-                list = new ArrayList<>();
-            } else {
-                list = temp.get(v.getLong("groupId"));
-            }
-
-            list.add(JSON.toJavaObject(v, UnhandledHttpRequest.class));
-            temp.put(v.getLong("groupId"), list);
-        });
-
-        temp.forEach((k, v) -> {
-//            RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(k).share().block();
-//            List<Long> botIds = repetitiveGroup.getBotIds();
-//
-//            v.parallelStream()
-//                    .forEach(b -> {
-//                        JSONObject jsonObject = JSON.parseObject(b.getBody());
-//                        Random random = new Random();
-//
-//                        if (b.getMethod().equals("/send/msg")) {
-//                            botController.sendMsg(jsonObject.getString("msg"), botIds.get(random.nextInt(botIds.size())),
-//                                    jsonObject.getLong("groupId"), jsonObject.getLong("qq"));
-//                        } else {
-//                            botController.collectMsg(botIds.get(random.nextInt(botIds.size())),
-//                                    jsonObject.getLong("groupId"), jsonObject.getLong("qq"));
-//                        }
-//
-//                        unhandledHttpRequestService.delete(b);
-//                    });
-
-        });
+        rocketMQTemplate.asyncSend("unhandled-group-message", messageList, logSendCallbackService);
     }
 
     private List<BotAccount> stringToBotAccountList(String s) {

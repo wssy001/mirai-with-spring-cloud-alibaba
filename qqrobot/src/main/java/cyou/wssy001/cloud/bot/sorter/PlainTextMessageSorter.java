@@ -65,6 +65,5 @@ public class PlainTextMessageSorter implements RocketMQListener<String> {
                 .collect(Collectors.toList());
 
         rocketMQTemplate.asyncSend("plain-text-message", messageList, logSendCallbackService);
-        log.info("******PlainTextMessageSorter发送ing");
     }
 }

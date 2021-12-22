@@ -1,4 +1,4 @@
-package cyou.wssy001.cloud.bot.entity;
+package cyou.wssy001.cloud.bot.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,22 +10,11 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class UnhandledHttpRequest implements Serializable {
+public class UnhandledHttpRequestDto implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
     private String id;
-    private String msg;
-    private Long botId;
+    private String miraiCode;
     private Long groupId;
-    private Long qq;
-    private String method;
-
-    public Long getQQ() {
-        return qq;
-    }
-
-    public void setQQ(Long qq) {
-        this.qq = qq;
-    }
 }

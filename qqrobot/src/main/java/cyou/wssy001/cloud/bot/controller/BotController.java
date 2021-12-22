@@ -1,7 +1,10 @@
 package cyou.wssy001.cloud.bot.controller;
 
+import cyou.wssy001.cloud.bot.service.LogSendCallbackService;
+import lombok.RequiredArgsConstructor;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.NormalMember;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -9,19 +12,24 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @RestController
+@RequiredArgsConstructor
 public class BotController {
+    private final RocketMQTemplate rocketMQTemplate;
+    private final LogSendCallbackService logSendCallbackService;
 
     @GetMapping("/send/msg")
     public Mono<String> sendMsg(
             @RequestParam("msg") String msg,
             @RequestParam("botId") Long botId,
-            @RequestParam(value = "groupId",required = false) Long groupId,
+            @RequestParam(value = "groupId", required = false) Long groupId,
             @RequestParam("qq") Long qq
     ) {
         Bot bot = Bot.getInstanceOrNull(botId);
         if (bot == null) return Mono.just("Bot ID有误").cache();
 
-        bot.getGroup(groupId).get(qq).sendMessage(msg);
+        bot.getGroup(groupId)
+                .get(qq)
+                .sendMessage(msg);
         return Mono.just("成功").cache();
     }
 
@@ -34,7 +42,8 @@ public class BotController {
         Bot bot = Bot.getInstanceOrNull(botId);
         if (bot == null) return Mono.just("Bot ID有误").cache();
 
-        NormalMember normalMember = bot.getGroup(groupId).get(qq);
+        NormalMember normalMember = bot.getGroup(groupId)
+                .get(qq);
 
         return Mono.just("成功").cache();
     }
