@@ -8,6 +8,8 @@ import net.mamoe.mirai.message.code.MiraiCode;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.redis.core.ReactiveRedisOperations;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -48,7 +50,9 @@ public class GroupMessageHandler {
 
         Duration ttl = Duration.ofSeconds(5);
         reactiveRedisOperations.expire(key, ttl);
-        rocketMQTemplate.asyncSend("group-message", messageChainDto, logSendCallbackService);
+
+        Message<MessageChainDto> message = MessageBuilder.withPayload(messageChainDto).setHeader("KEYS", "GroupMessage_" + key).build();
+        rocketMQTemplate.asyncSend("group-message", message, logSendCallbackService);
     }
 
 }

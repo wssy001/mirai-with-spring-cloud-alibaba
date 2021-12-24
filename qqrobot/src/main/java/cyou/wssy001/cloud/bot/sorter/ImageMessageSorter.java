@@ -61,7 +61,7 @@ public class ImageMessageSorter implements RocketMQListener<String> {
     @SneakyThrows
     private void send(List<ImageDto> imageDtoList) {
         List<Message<ImageDto>> messageList = imageDtoList.parallelStream()
-                .map(v -> MessageBuilder.withPayload(v).build())
+                .map(v -> MessageBuilder.withPayload(v).setHeader("KEYS", "ImageDto_" + v.getId()).build())
                 .collect(Collectors.toList());
 
         rocketMQTemplate.asyncSend("image-message", messageList, logSendCallbackService);

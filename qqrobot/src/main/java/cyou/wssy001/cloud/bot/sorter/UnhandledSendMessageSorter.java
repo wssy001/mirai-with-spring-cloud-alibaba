@@ -32,11 +32,11 @@ public class UnhandledSendMessageSorter implements MessageListenerConcurrently {
 
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> messageExtList, ConsumeConcurrentlyContext context) {
-        List<Message<String>> messageList = messageExtList.parallelStream()
+        List<Message<UnhandledHttpRequestDto>> messageList = messageExtList.parallelStream()
                 .map(v -> JSON.parseObject(new String(v.getBody()), UnhandledHttpRequest.class))
                 .map(this::toUnhandledHttpRequestDto)
                 .filter(Objects::nonNull)
-                .map(v -> MessageBuilder.withPayload(v).build())
+                .map(v -> MessageBuilder.withPayload(v).setHeader("KEYS", "UnhandledHttpRequestDto_" + v.getId()).build())
                 .collect(Collectors.toList());
 
         rocketMQTemplate.asyncSend("unhandled-group-plain-text-message", messageList, logSendCallbackService);
@@ -44,15 +44,15 @@ public class UnhandledSendMessageSorter implements MessageListenerConcurrently {
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
 
-    private String toUnhandledHttpRequestDto(UnhandledHttpRequest unhandledHttpRequest) {
+    private UnhandledHttpRequestDto toUnhandledHttpRequestDto(UnhandledHttpRequest unhandledHttpRequest) {
         if (!unhandledHttpRequest.getMethod().equals("/send/msg") || unhandledHttpRequest.getGroupId() == null)
             return null;
         MessageChainBuilder append = new MessageChainBuilder()
                 .append(new PlainText(unhandledHttpRequest.getMsg()))
                 .append(new At(unhandledHttpRequest.getQQ()));
 
-        UnhandledHttpRequestDto unhandledHttpRequestDto = new UnhandledHttpRequestDto(unhandledHttpRequest.getId(), MiraiCode.serializeToMiraiCode(append), unhandledHttpRequest.getGroupId());
-        return JSON.toJSONString(unhandledHttpRequestDto);
+        return new UnhandledHttpRequestDto(unhandledHttpRequest.getId(), MiraiCode.serializeToMiraiCode(append), unhandledHttpRequest.getGroupId());
+
     }
 
 }
