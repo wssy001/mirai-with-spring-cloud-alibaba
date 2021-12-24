@@ -4,7 +4,6 @@ import com.alibaba.fastjson.JSON;
 import cyou.wssy001.cloud.bot.dto.UnhandledHttpRequestDto;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.MessageChain;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.time.Duration;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 @RocketMQMessageListener(topic = "unhandled-group-plain-text-message", consumerGroup = "plain-text-message")
@@ -37,7 +35,7 @@ public class UnhandledPlainTextMessageConsumer implements RocketMQListener<Strin
                 .findFirst()
                 .orElse(null);
 
-        if (bot == null) return;
+        if (bot == null) throw new RuntimeException("无Bot在目标群");
 
         String msgId = unhandledHttpRequestDto.getId();
         Boolean nonExist = reactiveRedisOperations.opsForValue()
@@ -45,7 +43,7 @@ public class UnhandledPlainTextMessageConsumer implements RocketMQListener<Strin
                 .share()
                 .block();
 
-        if (!nonExist) return;
+        if (!nonExist) throw new RuntimeException("重复消费");
 
         Duration ttl = Duration.ofSeconds(5);
         reactiveRedisOperations.expire(msgId, ttl);

@@ -71,18 +71,18 @@ public class RobotService {
 
     }
 
-    private void handleStoredHttpRequest() {
-        List<Message<UnhandledHttpRequest>> messageList = unhandledHttpRequestService.getAll()
-                .filter(Objects::nonNull)
-                .map(v -> MessageBuilder.withPayload(v).build())
-                .share()
-                .collectList()
-                .block();
+private void handleStoredHttpRequest() {
+    List<Message<UnhandledHttpRequest>> messageList = unhandledHttpRequestService.getAll()
+            .filter(Objects::nonNull)
+            .map(v -> MessageBuilder.withPayload(v).build())
+            .share()
+            .collectList()
+            .block();
 
-        if (messageList == null) return;
+    if (messageList == null) return;
 
-        rocketMQTemplate.asyncSend("unhandled-group-message", messageList, logSendCallbackService);
-    }
+    rocketMQTemplate.asyncSend("unhandled-group-message", messageList, logSendCallbackService);
+}
 
     private List<BotAccount> stringToBotAccountList(String s) {
         return JSON.parseArray(s, BotAccount.class);

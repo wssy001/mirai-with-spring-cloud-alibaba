@@ -30,13 +30,16 @@ public class PlainTextMessageDBConsumer implements MessageListenerConcurrently {
                 .map(this::toTPlainText)
                 .collect(Collectors.toList());
 
-        tPlainTextService.saveBatch(plainTextList);
+        tPlainTextService.saveBatch(plainTextList)
+                .share()
+                .collectList()
+                .block();
 
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
 
     private TPlainText toTPlainText(PlainTextDto plainTextDto) {
-        TPlainText plainText = new TPlainText();
+        TPlainText plainText = TPlainText.builder().build();
         BeanUtil.copyProperties(plainTextDto, plainText);
         return plainText;
     }
