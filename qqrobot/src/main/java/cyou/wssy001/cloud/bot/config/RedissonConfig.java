@@ -1,4 +1,4 @@
-package cyou.localhost.cloud.bot.config;
+package cyou.wssy001.cloud.bot.config;
 
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: qqrobot
+
+  cloud:
+    nacos:
+      server-addr: 10.60.64.66:38848
+      config:
+        namespace: 3e4a06ab-3139-46e8-bc82-888154383de0
+        name: qqrobot-dev.yml
+    sentinel:
+      transport:
+        dashboard: 10.60.64.66:38858
+        port: 38719
+      datasource:
+        flow-rule:
+          nacos:
+            server-addr: 10.60.64.66:38848
+            username: nacos
+            password: nacos
+            namespace: 3e4a06ab-3139-46e8-bc82-888154383de0
+            data-id: qqrobot-sentinel-flow-dev.json
+            rule-type: flow
+
+  main:
+    allow-bean-definition-overriding: true
