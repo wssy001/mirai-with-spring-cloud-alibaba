@@ -7,8 +7,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.code.MiraiCode;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.redis.core.ReactiveRedisOperations;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -21,9 +20,7 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class GroupMessageHandler {
     @Resource
-    private ReactiveRedisOperations<String, MessageChainDto> reactiveRedisOperations;
-    @Resource
-    private ReactiveRedisTemplate<String, String> reactiveRedisTemplate;
+    private RedisOperations<String, MessageChainDto> redisOperations;
 
     private final RocketMQTemplate rocketMQTemplate;
     private final LogSendCallbackService logSendCallbackService;
@@ -44,15 +41,13 @@ public class GroupMessageHandler {
         messageChainDto.setGroupNumber(event.getGroup().getId());
         messageChainDto.setMiraiCode(miraiCode);
 
-        Boolean nonExist = reactiveRedisOperations.opsForValue()
-                .setIfAbsent(key, messageChainDto)
-                .share()
-                .block();
+        Boolean nonExist = redisOperations.opsForValue()
+                .setIfAbsent(key, messageChainDto);
 
         if (!nonExist) return;
 
         Duration ttl = Duration.ofSeconds(5);
-        reactiveRedisOperations.expire(key, ttl);
+        redisOperations.expire(key, ttl);
         Message<MessageChainDto> message = MessageBuilder.withPayload(messageChainDto)
                 .setHeader("KEYS", "GroupMessage_" + key)
                 .build();
