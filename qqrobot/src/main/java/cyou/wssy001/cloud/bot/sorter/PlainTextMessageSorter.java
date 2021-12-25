@@ -61,7 +61,9 @@ public class PlainTextMessageSorter implements RocketMQListener<String> {
     private void send(List<PlainTextDto> plainTextDto) {
 
         List<Message<PlainTextDto>> messageList = plainTextDto.parallelStream()
-                .map(v -> MessageBuilder.withPayload(v).setHeader("KEYS", "PlainTextDto_" + v.getId()).build())
+                .map(v -> MessageBuilder.withPayload(v)
+                        .setHeader("KEYS", "PlainTextDto_" + v.getId())
+                        .build())
                 .collect(Collectors.toList());
 
         rocketMQTemplate.asyncSend("plain-text-message", messageList, logSendCallbackService);
