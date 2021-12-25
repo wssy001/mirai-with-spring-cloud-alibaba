@@ -11,7 +11,6 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.event.events.BotOfflineEvent;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
-import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 
@@ -41,24 +40,22 @@ public class BotOfflineHandler {
 
         log.info("******BotOfflineHandler：QQ：{}，Reason：{}", id, reason);
 
-if (Bot.getInstances().isEmpty()) {
-    FlowRule rule = new FlowRule("/send/msg");
-    rule.setCount(0);
-    rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-    rule.setLimitApp("default");
+        if (Bot.getInstances().isEmpty()) {
+            FlowRule rule = new FlowRule("/send/msg");
+            rule.setCount(0);
+            rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+            rule.setLimitApp("default");
 
-    sentinelService.saveOrUpdateFlowRule(rule);
-    rule.setResource("/collect/msg");
-    sentinelService.saveOrUpdateFlowRule(rule);
-}
+            sentinelService.saveOrUpdateFlowRule(rule);
+            rule.setResource("/collect/msg");
+            sentinelService.saveOrUpdateFlowRule(rule);
+        }
 
         repetitiveGroupService.getAll()
-                .parallel()
-                .runOn(Schedulers.parallel())
-                .sequential()
+                .parallelStream()
                 .filter(v -> v.getBotIds().contains(id))
                 .map(v -> updateBotIdList(id, v))
-                .subscribe(this::updateOrDeleteRepetitiveGroup);
+                .forEach(this::updateOrDeleteRepetitiveGroup);
 
         bot.close();
     }

@@ -4,23 +4,17 @@ import cn.hutool.core.util.IdUtil;
 import cyou.wssy001.cloud.bot.entity.RepetitiveGroup;
 import cyou.wssy001.cloud.bot.service.RepetitiveGroupService;
 import lombok.RequiredArgsConstructor;
-import net.mamoe.mirai.contact.ContactList;
-import net.mamoe.mirai.contact.NormalMember;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.data.domain.Range;
 import org.springframework.data.redis.core.DefaultTypedTuple;
-import org.springframework.data.redis.core.ReactiveZSetOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -28,15 +22,13 @@ public class GroupMessageHandler {
     private final RedissonClient redissonClient;
     private final RepetitiveGroupService repetitiveGroupService;
     @Resource
-    private ReactiveZSetOperations<Long, Integer> reactiveZSetOperations;
+    private ZSetOperations<Long, Integer> zSetOperations;
 
     public void handle(@NotNull GroupMessageEvent event) {
         long groupId = event.getGroup().getId();
         long botId = event.getBot().getId();
 
-        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(groupId)
-                .share()
-                .block();
+        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(groupId);
 
         RLock lock = null;
         if (hasBeenConsumed(event, groupId)) return;
@@ -55,18 +47,15 @@ public class GroupMessageHandler {
     private boolean hasBeenConsumed(@NotNull GroupMessageEvent event, long groupId) {
 
         long second = new Date().getTime();
-        Range<Double> range = Range.closed(0.0, second + 0.0);
-        reactiveZSetOperations.removeRangeByScore(groupId, range);
+        zSetOperations.removeRangeByScore(groupId, 0, second);
 
         int[] ids = event.getSource().getIds();
-        List<DefaultTypedTuple<Integer>> list = new ArrayList<>();
+        Set<ZSetOperations.TypedTuple<Integer>> list = new HashSet<>();
         for (int id : ids) {
             list.add(new DefaultTypedTuple<>(id, second + 10.0));
         }
 
-        Long unExist = reactiveZSetOperations.addAll(groupId, list)
-                .share()
-                .block();
+        Long unExist = zSetOperations.add(groupId, list);
 
         return unExist == null || unExist == 0;
     }

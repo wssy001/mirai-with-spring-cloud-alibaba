@@ -11,7 +11,7 @@ import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Group;
 import net.mamoe.mirai.event.events.BotOnlineEvent;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.data.redis.core.ReactiveSetOperations;
+import org.springframework.data.redis.core.SetOperations;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -28,7 +28,7 @@ public class BotOnlineHandler {
     private final SentinelService sentinelService;
     private final RepetitiveGroupService repetitiveGroupService;
     @Resource
-    private ReactiveSetOperations<String, Long> reactiveSetOperations;
+    private SetOperations<String, Long> setOperations;
 
     public void handle(@NotNull BotOnlineEvent event) {
         Bot bot = event.getBot();
@@ -54,7 +54,7 @@ public class BotOnlineHandler {
                 .collect(Collectors.toSet());
 
         groupIds.parallelStream()
-                .forEach(v -> reactiveSetOperations.add(id + "", v));
+                .forEach(v -> setOperations.add(id + "", v));
 
         instances.removeIf(v -> v.getId() == id);
         instances.parallelStream()
@@ -67,14 +67,12 @@ public class BotOnlineHandler {
         list.add(self);
         list.add(target);
 
-        reactiveSetOperations.intersect(self + "", target + "")
-                .subscribe(v -> insert(v, list));
+        setOperations.intersect(self + "", target + "")
+                .forEach(v -> insert(v, list));
     }
 
     private void insert(Long groupId, List<Long> botIds) {
-        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(groupId)
-                .share()
-                .block();
+        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(groupId);
 
         if (repetitiveGroup.getId() == null)
             repetitiveGroup.setBotIds(new ArrayList<>());

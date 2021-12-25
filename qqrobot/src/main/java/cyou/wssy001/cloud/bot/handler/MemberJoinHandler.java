@@ -37,9 +37,7 @@ public class MemberJoinHandler {
 
         if (!idList.contains(memberId)) return;
 
-        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(group.getId())
-                .share()
-                .block();
+        RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(group.getId());
 
         List<Long> botIds = idList.parallelStream()
                 .filter(group::contains)

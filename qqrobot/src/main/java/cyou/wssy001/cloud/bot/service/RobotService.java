@@ -8,6 +8,8 @@ import cyou.wssy001.cloud.bot.entity.DynamicProperty;
 import cyou.wssy001.cloud.bot.entity.RepetitiveGroup;
 import cyou.wssy001.cloud.bot.entity.UnhandledHttpRequest;
 import cyou.wssy001.cloud.bot.handler.*;
+import cyou.wssy001.cloud.bot.vo.CollectMsgVo;
+import cyou.wssy001.cloud.bot.vo.SendMsgVo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
@@ -80,11 +82,10 @@ public class RobotService {
 
     private void handleStoredHttpRequest() {
         List<JSONObject> block = unhandledHttpRequestService.getAll()
+                .parallelStream()
                 .map(v -> JSON.parseObject(v.getBody()))
                 .filter(v -> v.containsKey("groupId"))
-                .share()
-                .collectList()
-                .block();
+                .collect(Collectors.toList());
 
         if (block == null) return;
 
@@ -103,7 +104,7 @@ public class RobotService {
         });
 
         temp.forEach((k, v) -> {
-            RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(k).share().block();
+            RepetitiveGroup repetitiveGroup = repetitiveGroupService.get(k);
             List<Long> botIds = repetitiveGroup.getBotIds();
 
             v.parallelStream()
@@ -112,11 +113,17 @@ public class RobotService {
                         Random random = new Random();
 
                         if (b.getMethod().equals("/send/msg")) {
-                            botController.sendMsg(jsonObject.getString("msg"), botIds.get(random.nextInt(botIds.size())),
-                                    jsonObject.getLong("groupId"), jsonObject.getLong("qq"));
+                            SendMsgVo sendMsgVo = jsonObject.toJavaObject(SendMsgVo.class);
+                            int index = random.nextInt(botIds.size());
+                            sendMsgVo.setBotId(botIds.get(index));
+
+                            botController.sendMsg(sendMsgVo);
                         } else {
-                            botController.collectMsg(botIds.get(random.nextInt(botIds.size())),
-                                    jsonObject.getLong("groupId"), jsonObject.getLong("qq"));
+                            CollectMsgVo collectMsgVo = jsonObject.toJavaObject(CollectMsgVo.class);
+                            int index = random.nextInt(botIds.size());
+                            collectMsgVo.setBotId(botIds.get(index));
+
+                            botController.collectMsg(collectMsgVo);
                         }
 
                         unhandledHttpRequestService.delete(b);

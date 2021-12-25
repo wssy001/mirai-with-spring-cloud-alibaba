@@ -1,41 +1,39 @@
 package cyou.wssy001.cloud.bot.Controller;
 
+import cyou.wssy001.cloud.bot.vo.CollectMsgVo;
+import cyou.wssy001.cloud.bot.vo.SendMsgVo;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.contact.NormalMember;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Mono;
 
 @RestController
 public class BotController {
 
     @GetMapping("/send/msg")
-    public Mono<String> sendMsg(
-            @RequestParam("msg") String msg,
-            @RequestParam("botId") Long botId,
-            @RequestParam(value = "groupId",required = false) Long groupId,
-            @RequestParam("qq") Long qq
+    public String sendMsg(
+            @RequestBody SendMsgVo sendMsgVo
     ) {
-        Bot bot = Bot.getInstanceOrNull(botId);
-        if (bot == null) return Mono.just("Bot ID有误").cache();
+        Bot bot = Bot.getInstanceOrNull(sendMsgVo.getBotId());
+        if (bot == null) return "Bot ID有误";
 
-        bot.getGroup(groupId).get(qq).sendMessage(msg);
-        return Mono.just("成功").cache();
+        bot.getGroup(sendMsgVo.getGroupId())
+                .get(sendMsgVo.getQQ())
+                .sendMessage(sendMsgVo.getMsg());
+
+        return "成功";
     }
 
     @GetMapping("/collect/msg")
-    public Mono<String> collectMsg(
-            @RequestBody Long botId,
-            @RequestBody(required = false) Long groupId,
-            @RequestBody Long qq
+    public String collectMsg(
+            @RequestBody CollectMsgVo collectMsgVo
     ) {
-        Bot bot = Bot.getInstanceOrNull(botId);
-        if (bot == null) return Mono.just("Bot ID有误").cache();
+        Bot bot = Bot.getInstanceOrNull(collectMsgVo.getBotId());
+        if (bot == null) return "Bot ID有误";
 
-        NormalMember normalMember = bot.getGroup(groupId).get(qq);
+        bot.getGroup(collectMsgVo.getGroupId())
+                .get(collectMsgVo.getQQ());
 
-        return Mono.just("成功").cache();
+        return "成功";
     }
 }
