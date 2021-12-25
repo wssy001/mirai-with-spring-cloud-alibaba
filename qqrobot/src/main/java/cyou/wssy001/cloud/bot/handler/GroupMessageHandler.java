@@ -51,7 +51,9 @@ public class GroupMessageHandler {
         Duration ttl = Duration.ofSeconds(5);
         reactiveRedisOperations.expire(key, ttl);
 
-        Message<MessageChainDto> message = MessageBuilder.withPayload(messageChainDto).setHeader("KEYS", "GroupMessage_" + key).build();
+        Message<MessageChainDto> message = MessageBuilder.withPayload(messageChainDto)
+                .setHeader("KEYS", "GroupMessage_" + key)
+                .build();
         rocketMQTemplate.asyncSend("group-message", message, logSendCallbackService);
     }
 

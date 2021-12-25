@@ -36,7 +36,9 @@ public class UnhandledSendMessageSorter implements MessageListenerConcurrently {
                 .map(v -> JSON.parseObject(new String(v.getBody()), UnhandledHttpRequest.class))
                 .map(this::toUnhandledHttpRequestDto)
                 .filter(Objects::nonNull)
-                .map(v -> MessageBuilder.withPayload(v).setHeader("KEYS", "UnhandledHttpRequestDto_" + v.getId()).build())
+                .map(v -> MessageBuilder.withPayload(v)
+                        .setHeader("KEYS", "UnhandledHttpRequestDto_" + v.getId())
+                        .build())
                 .collect(Collectors.toList());
 
         rocketMQTemplate.asyncSend("unhandled-group-plain-text-message", messageList, logSendCallbackService);
