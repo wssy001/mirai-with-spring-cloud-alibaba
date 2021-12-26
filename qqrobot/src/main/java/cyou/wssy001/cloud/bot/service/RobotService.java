@@ -4,11 +4,15 @@ import com.alibaba.fastjson.JSON;
 import cyou.wssy001.cloud.bot.entity.BotAccount;
 import cyou.wssy001.cloud.bot.entity.DynamicProperty;
 import cyou.wssy001.cloud.bot.entity.UnhandledHttpRequest;
+import cyou.wssy001.cloud.bot.handler.BotOfflineHandler;
+import cyou.wssy001.cloud.bot.handler.BotOnlineHandler;
 import cyou.wssy001.cloud.bot.handler.GroupMessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactory;
+import net.mamoe.mirai.event.events.BotOfflineEvent;
+import net.mamoe.mirai.event.events.BotOnlineEvent;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.network.LoginFailedException;
 import net.mamoe.mirai.utils.BotConfiguration;
@@ -32,6 +36,8 @@ public class RobotService {
     private final LogSendCallbackService logSendCallbackService;
 
     private final GroupMessageHandler groupMessageHandler;
+    private final BotOnlineHandler botOnlineHandler;
+    private final BotOfflineHandler botOfflineHandler;
 
     @PostConstruct
     private void init() {
@@ -59,9 +65,15 @@ public class RobotService {
 
             Bot bot = BotFactory.INSTANCE.newBot(botAccountInfo.getAccount(), botAccountInfo.getPassword(), botConfiguration);
             try {
-                bot.getEventChannel().subscribeAlways(GroupMessageEvent.class, groupMessageHandler::handle);
+                bot.getEventChannel()
+                        .subscribeAlways(GroupMessageEvent.class, groupMessageHandler::handle);
+                bot.getEventChannel()
+                        .subscribeAlways(BotOnlineEvent.class, botOnlineHandler::handle);
+                bot.getEventChannel()
+                        .subscribeAlways(BotOfflineEvent.class, botOfflineHandler::handle);
                 bot.login();
                 log.info("******RobotService QQ：{} 登陆成功", botAccountInfo.getAccount());
+//                去掉break即可实现多bot同时在线
                 break;
             } catch (LoginFailedException e) {
                 bot.close();
@@ -71,18 +83,18 @@ public class RobotService {
 
     }
 
-private void handleStoredHttpRequest() {
-    List<Message<UnhandledHttpRequest>> messageList = unhandledHttpRequestService.getAll()
-            .filter(Objects::nonNull)
-            .map(v -> MessageBuilder.withPayload(v).build())
-            .share()
-            .collectList()
-            .block();
+    private void handleStoredHttpRequest() {
+        List<Message<UnhandledHttpRequest>> messageList = unhandledHttpRequestService.getAll()
+                .filter(Objects::nonNull)
+                .map(v -> MessageBuilder.withPayload(v).build())
+                .share()
+                .collectList()
+                .block();
 
-    if (messageList == null) return;
+        if (messageList == null) return;
 
-    rocketMQTemplate.asyncSend("unhandled-group-message", messageList, logSendCallbackService);
-}
+        rocketMQTemplate.asyncSend("unhandled-group-message", messageList, logSendCallbackService);
+    }
 
     private List<BotAccount> stringToBotAccountList(String s) {
         return JSON.parseArray(s, BotAccount.class);
