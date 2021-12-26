@@ -75,12 +75,12 @@ public class RocketMQConfig {
     }
 
     @Bean
-    public DefaultMQPushConsumer unhandledGroupMessageConsumer() {
+    public DefaultMQPushConsumer unhandledSendMessageSorter() {
         DefaultMQPushConsumer consumer = getDefaultBatchConsumer();
         consumer.registerMessageListener(unhandledSendMessageSorter);
         consumer.setConsumerGroup("group-message");
         try {
-            consumer.subscribe("unhandled-group-message", "");
+            consumer.subscribe("unhandled-send-message", "");
             consumer.start();
         } catch (Exception e) {
             log.info("******Exception：{}", e.getMessage());

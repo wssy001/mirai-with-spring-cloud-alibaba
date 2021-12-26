@@ -5,11 +5,15 @@ import com.alibaba.csp.sentinel.adapter.spring.webflux.callback.BlockRequestHand
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import cyou.wssy001.cloud.bot.entity.UnhandledHttpRequest;
+import cyou.wssy001.cloud.bot.service.LogSendCallbackService;
 import cyou.wssy001.cloud.bot.service.UnhandledHttpRequestService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
@@ -25,6 +29,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RobotBlockExceptionHandler implements BlockRequestHandler {
     private final UnhandledHttpRequestService unhandledHttpRequestService;
+    private final RocketMQTemplate rocketMQTemplate;
+    private final LogSendCallbackService logSendCallbackService;
 
     @SneakyThrows
     @Override
@@ -45,6 +51,10 @@ public class RobotBlockExceptionHandler implements BlockRequestHandler {
         unhandledHttpRequest.setGroupId(jsonObject.getLong("groupId"));
         unhandledHttpRequest.setQQ(jsonObject.getLong("qq"));
         unhandledHttpRequestService.upset(unhandledHttpRequest);
+        Message<UnhandledHttpRequest> message = MessageBuilder.withPayload(unhandledHttpRequest)
+                .setHeader("KEYS", "UnhandledHttpRequest_" + unhandledHttpRequest.getId())
+                .build();
+        rocketMQTemplate.asyncSend("unhandled-send-message", message, logSendCallbackService);
         jsonObject.clear();
         jsonObject.put("msg", "机器人服务正忙，请稍后重试");
         jsonObject.put("code", HttpStatus.TOO_MANY_REQUESTS.value());

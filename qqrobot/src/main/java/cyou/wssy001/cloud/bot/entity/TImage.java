@@ -16,10 +16,10 @@ import java.util.Objects;
 public class TImage {
 
     /**
-     * 自增ID
+     * ID
      */
     @Id
-    private Long id;
+    private String id;
 
     /**
      * mirai消息ID

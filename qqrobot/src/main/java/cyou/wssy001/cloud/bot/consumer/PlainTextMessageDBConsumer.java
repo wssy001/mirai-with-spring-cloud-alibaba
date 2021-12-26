@@ -6,7 +6,6 @@ import cyou.wssy001.cloud.bot.dto.PlainTextDto;
 import cyou.wssy001.cloud.bot.entity.TPlainText;
 import cyou.wssy001.cloud.bot.service.TPlainTextService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PlainTextMessageDBConsumer implements MessageListenerConcurrently {

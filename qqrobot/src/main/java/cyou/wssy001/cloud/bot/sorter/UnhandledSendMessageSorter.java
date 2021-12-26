@@ -5,7 +5,6 @@ import cyou.wssy001.cloud.bot.dto.UnhandledHttpRequestDto;
 import cyou.wssy001.cloud.bot.entity.UnhandledHttpRequest;
 import cyou.wssy001.cloud.bot.service.LogSendCallbackService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.At;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
@@ -23,7 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UnhandledSendMessageSorter implements MessageListenerConcurrently {

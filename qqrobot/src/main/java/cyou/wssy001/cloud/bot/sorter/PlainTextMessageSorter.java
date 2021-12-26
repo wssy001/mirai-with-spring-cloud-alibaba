@@ -6,7 +6,6 @@ import cyou.wssy001.cloud.bot.dto.PlainTextDto;
 import cyou.wssy001.cloud.bot.service.LogSendCallbackService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import net.mamoe.mirai.message.code.MiraiCode;
 import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.PlainText;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 @RocketMQMessageListener(topic = "group-message", consumerGroup = "plain-text-message")

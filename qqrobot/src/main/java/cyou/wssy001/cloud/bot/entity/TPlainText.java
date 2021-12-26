@@ -18,10 +18,10 @@ import java.util.Objects;
 public class TPlainText {
 
     /**
-     * 自增ID
+     * ID
      */
     @Id
-    private Long id;
+    private String id;
 
     /**
      * mirai消息ID
