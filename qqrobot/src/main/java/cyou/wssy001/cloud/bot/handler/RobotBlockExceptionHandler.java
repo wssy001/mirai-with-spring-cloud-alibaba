@@ -9,9 +9,11 @@ import cyou.wssy001.cloud.bot.service.LogSendCallbackService;
 import cyou.wssy001.cloud.bot.service.UnhandledHttpRequestService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RobotBlockExceptionHandler implements BlockRequestHandler {
@@ -35,7 +38,9 @@ public class RobotBlockExceptionHandler implements BlockRequestHandler {
     @SneakyThrows
     @Override
     public Mono<ServerResponse> handleRequest(ServerWebExchange exchange, Throwable t) {
-        URI uri = exchange.getRequest().getURI();
+        ServerHttpRequest request = exchange.getRequest();
+
+        URI uri = request.getURI();
         JSONObject jsonObject = new JSONObject();
         jsonObject.putAll(decodeBody(uri.getRawQuery()));
 

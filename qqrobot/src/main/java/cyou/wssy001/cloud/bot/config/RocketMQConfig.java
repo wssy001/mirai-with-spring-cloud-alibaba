@@ -48,7 +48,6 @@ public class RocketMQConfig {
     @Bean
     public DefaultMQPushConsumer imageMessageDBBatchConsumer() {
         DefaultMQPushConsumer consumer = getDefaultBatchConsumer();
-        consumer.setNamesrvAddr(nameServer);
         consumer.registerMessageListener(imageMessageDBConsumer);
         consumer.setConsumerGroup("image-db");
         try {
@@ -75,7 +74,7 @@ public class RocketMQConfig {
     }
 
     @Bean
-    public DefaultMQPushConsumer unhandledSendMessageSorter() {
+    public DefaultMQPushConsumer unhandledSendMessageBatchSorter() {
         DefaultMQPushConsumer consumer = getDefaultBatchConsumer();
         consumer.registerMessageListener(unhandledSendMessageSorter);
         consumer.setConsumerGroup("group-message");
