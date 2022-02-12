@@ -44,10 +44,10 @@ public class RedisConfig extends CachingConfigurerSupport {
     private static RedisSerializationContext<String, Object> getObjectRedisSerializationContext() {
         return RedisSerializationContext
                 .<String, Object>newSerializationContext(new GenericFastJsonRedisSerializer())
-                .key(new FastJsonRedisSerializer<>(String.class))
-                .value(new FastJsonRedisSerializer<>(Object.class))
-                .hashKey(new FastJsonRedisSerializer<>(String.class))
-                .hashValue(new FastJsonRedisSerializer<>(Object.class))
+                .key(new FastJson2JsonRedisSerializer<>(String.class))
+                .value(new FastJson2JsonRedisSerializer<>(Object.class))
+                .hashKey(new FastJson2JsonRedisSerializer<>(String.class))
+                .hashValue(new FastJson2JsonRedisSerializer<>(Object.class))
                 .build();
     }
 }
