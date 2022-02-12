@@ -27,7 +27,7 @@ public class FastJson2JsonRedisSerializer<T> implements RedisSerializer<T> {
 
     static {
         ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
-        ParserConfig.getGlobalInstance().addAccept("cyou.wssy001.qqrobot");
+        ParserConfig.getGlobalInstance().addAccept("cyou.wssy001.cloud.bot");
     }
 
     public FastJson2JsonRedisSerializer(Class<T> clazz) {
