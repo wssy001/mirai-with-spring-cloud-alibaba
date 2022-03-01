@@ -26,7 +26,7 @@
         <spring.cloud.alibaba.version>2021.1</spring.cloud.alibaba.version>
         <lombok.version>1.18.20</lombok.version>
         <redisson.version>3.16.4</redisson.version>
-        <hutool.version>5.7.15</hutool.version>
+        <hutool.version>5.7.19</hutool.version>
         <fastjson.version>1.2.78</fastjson.version>
         <commons.pool2.version>2.11.1</commons.pool2.version>
         <mirai.core.version>2.6.8</mirai.core.version>
